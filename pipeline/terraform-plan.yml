@@ -1,0 +1,31 @@
+parameters:
+  - name: environment
+    type: string
+
+steps:
+  - checkout: self
+
+  - script: |
+      echo "Logging in to Azure using Service Principal..."
+      az login --service-principal -u $(SP_CLIENT_ID) -p $(SP_PASSWORD) --tenant $(TENANT_ID)
+      az account show  # Verify that Azure CLI is authenticated
+    displayName: 'Azure CLI Login'
+
+  - script: |
+      echo "Installing Terraform..."
+      curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      sudo apt-get update && sudo apt-get install terraform
+      terraform --version  # Confirm Terraform installation
+    displayName: 'Install Terraform'
+
+  - script: |
+      echo "Terraform Init for ${{ parameters.environment }}"
+       terraform init \
+        -backend-config="key=terraform-${{ parameters.environment }}.tfstate"
+    displayName: 'Terraform Init'
+
+  - script: |
+      echo "Terraform Plan for ${{ parameters.environment }}"
+      terraform plan -var-file="configuration-${{ parameters.environment }}.tfvars"
+    displayName: 'Terraform Plan'
