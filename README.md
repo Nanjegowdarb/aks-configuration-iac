@@ -1,1 +1,1 @@
-# aks-configuration-iac
+This project provisions and deploys an Azure Kubernetes Service (AKS) cluster using Terraform, with CI/CD via Azure DevOps Pipelines. It supports multiple environments (dev, nonprod, prod) and uses remote state storage in Azure Blob Storage.

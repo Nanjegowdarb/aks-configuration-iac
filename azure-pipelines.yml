@@ -1,0 +1,44 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: environment
+    type: string
+    default: 'dev'
+    values:
+      - dev
+      - nonprod
+      - prod
+
+variables:
+  - group: SP-AKS-Credentials
+
+stages:
+  - stage: Terraform_Validate
+    displayName: "Terraform Plan ${{ parameters.environment }}"
+    jobs:
+      - job: Terraform_Plan
+        steps:
+          - template: pipeline/terraform-plan.yml
+            parameters:
+              environment: ${{ parameters.environment }}
+
+  - stage: Terraform_Deploy
+    displayName: "Terraform Apply ${{ parameters.environment }}"
+    dependsOn: Terraform_Validate
+    condition: succeeded()
+    jobs:
+      - deployment: Terraform_Apply
+        environment: Approvers
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: pipeline/terraform-apply.yml
+                  parameters:
+                    environment: ${{ parameters.environment }}
+
+
